@@ -1,13 +1,14 @@
 FROM ubuntu:22.04
 
-# Non-interactive mode set karna taaki installation ke waqt prompt na ruke
+# Non-interactive mode
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Zaroori packages, Lightweight XFCE Desktop, VNC, aur noVNC install karna
+# Zaroori tools, Lightweight Desktop, Xvfb (Virtual Display), x11vnc aur noVNC install karna
 RUN apt-get update && apt-get install -y \
     xfce4 \
     xfce4-goodies \
-    tightvncserver \
+    xvfb \
+    x11vnc \
     novnc \
     websockify \
     curl \
@@ -15,25 +16,34 @@ RUN apt-get update && apt-get install -y \
     sudo \
     && apt-get clean
 
-# Brave Browser ki official repository add aur install karna
+# Brave Browser install karna
 RUN curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | tee /etc/apt/sources.list.d/brave-browser-release.list && \
     apt-get update && apt-get install -y brave-browser
 
-# Environment setup
+# Environment variables
 ENV HOME=/root
 ENV DISPLAY=:1
 WORKDIR /root
 
-# VNC aur noVNC ko ek sath start karne ke liye startup script
+# Super stable startup script
 RUN echo '#!/bin/bash\n\
+# Purani temporary files saaf karna\n\
 rm -rf /tmp/.X1-lock /tmp/.X11-unix/X1\n\
-mkdir -p /root/.vnc\n\
-echo "vncpasswd" | vncpasswd -f > /root/.vnc/passwd\n\
-chmod 600 /root/.vnc/passwd\n\
-echo "startxfce4 &" > /root/.vnc/xstartup\n\
-chmod +x /root/.vnc/xstartup\n\
-vncserver :1 -geometry 1280x720 -depth 24\n\
+\n\
+# 1. Background mein Virtual Display start karna (1280x720 resolution)\n\
+Xvfb :1 -screen 0 1280x720x24 &\n\
+sleep 2\n\
+\n\
+# 2. XFCE Desktop environment start karna\n\
+startxfce4 &\n\
+sleep 2\n\
+\n\
+# 3. VNC Server start karna (Bina password ke taklif mukt connection ke liye)\n\
+x11vnc -forever -shared -nopw -display :1 -rfbport 5901 &\n\
+sleep 2\n\
+\n\
+# 4. noVNC proxy chalana jo port 3000 par listen karegi\n\
 /usr/share/novnc/utils/launch.sh --vnc localhost:5901 --listen 3000\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
