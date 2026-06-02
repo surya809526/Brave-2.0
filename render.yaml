@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: cloud-brave-browser
+    env: docker
+    plan: starter # Personal browsing ke liye Starter (Paid) plan sahi rahega
+    region: singapore # India ke paas ke liye Singapore region chunein (kam lag milega)
+    envVars:
+      - key: PUID
+        value: 1000
+      - key: PGID
+        value: 1000
+      - key: TZ
+        value: Asia/Kolkata
+      - key: CUSTOM_USER
+        value: swaraj # Aap apna manpasand username rakh sakte hain
+      - key: PASSWORD
+        value: Apna_Strong_Password_Yahan_Dalein # Isse aapka login secure rahega
