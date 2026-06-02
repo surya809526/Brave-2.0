@@ -6,7 +6,7 @@ ENV DISPLAY=:1
 
 EXPOSE 7860
 
-# Sirf zaroori X11 server, lightweight window manager (openbox), aur noVNC install karna
+# Zaroori X11 server, ultra-lightweight window manager (openbox), aur noVNC tools install karna
 RUN apt-get update && apt-get install -y \
     openbox \
     tigervnc-standalone-server \
@@ -22,17 +22,17 @@ RUN curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://br
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | tee /etc/apt/sources.list.d/brave-browser-release.list && \
     apt-get update && apt-get install -y brave-browser
 
-# Startup script banana jo sirf Openbox aur Brave Browser ko full-screen chalaye
+# Startup script banana jisme Chromium ke permission flags ko explicitly bypass kiya gaya ho
 RUN echo '#!/bin/bash\n\
 rm -rf /tmp/.X1-lock /tmp/.X11-unix/X1\n\
 mkdir -p /root/.vnc\n\
 echo "renderpass" | vncpasswd -f > /root/.vnc/passwd\n\
 chmod 600 /root/.vnc/passwd\n\
 \n\
-# Xstartup configuration (Bina desktop ke direct Brave run karna)\n\
+# Xstartup configuration - Yahan flags ko bypass kiya hai\n\
 echo "#!/bin/sh\n\
 openbox-session &\n\
-brave-browser --no-sandbox --window-position=0,0 --window-size=1280,720 --start-maximized &" > /root/.vnc/xstartup\n\
+brave-browser --no-sandbox --no-zygote --disable-no-sandbox-and-elevated-privileges --disable-gpu --window-position=0,0 --window-size=1280,720 --start-maximized &" > /root/.vnc/xstartup\n\
 chmod +x /root/.vnc/xstartup\n\
 \n\
 # VNC Server start karna mobile-friendly resolution mein\n\
